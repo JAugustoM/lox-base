@@ -12,6 +12,7 @@ print_cmd  : "print" expr ";"
 
 // EXPRESSÕES
 ?expr      : test
+           | call
 
 ?test      : test "==" cmp  -> eq
            | test "!=" cmp  -> ne
@@ -37,9 +38,15 @@ print_cmd  : "print" expr ";"
            | STRING
            | NIL
            | "(" cmp ")"
-           | call
+           | obj
 
-call       : VAR "(" params ")"
+obj        : atom attr
+
+attr       : "." VAR
+
+call       : call "(" params ")"
+           | VAR "(" params ")"
+           | obj "(" params ")"
 params     : [ expr ("," expr )* ]
 
 BOOL.2     : "true" | "false"

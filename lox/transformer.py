@@ -48,9 +48,15 @@ class LoxTransformer(Transformer):
     ne = op_handler(op.ne)
 
     # Outras expressões
-    def call(self, name: Var, params: list):
-        return Call(name.name, params)
-        
+    def obj(self, object: Var, attr: Var):
+        return Getattr(object, str(attr))
+
+    def attr(self, attr: Var):
+        return attr.name
+
+    def call(self, name: Var | Call | Getattr, params: list):
+        return Call(name, params)
+
     def params(self, *args):
         params = list(args)
         return params
@@ -66,11 +72,11 @@ class LoxTransformer(Transformer):
     def NUMBER(self, token):
         num = float(token)
         return Literal(num)
-    
+
     def STRING(self, token):
         text = str(token)[1:-1]
         return Literal(text)
-    
+
     def NIL(self, _):
         return Literal(None)
 

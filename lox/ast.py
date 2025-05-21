@@ -1,6 +1,6 @@
 from abc import ABC
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Union
 
 from .ctx import Ctx
 
@@ -141,18 +141,25 @@ class Call(Expr):
 
     Ex.: fat(42)
     """
-    name: str
+
+    no: Union[Var, "Call", "Getattr"]
     params: list[Expr]
-    
+
     def eval(self, ctx: Ctx):
-        func = ctx[self.name]
+        if isinstance(self.no, Var):
+            func = ctx[self.no.name]
+        elif isinstance(self.no, Call):
+            func = self.no.eval(ctx)
+        else:
+            func = self.no.eval(ctx)
+
         params = []
         for param in self.params:
             params.append(param.eval(ctx))
-        
+
         if callable(func):
             return func(*params)
-        raise TypeError(f"{self.name} não é uma função!")
+        raise TypeError(f"{self.no} não é uma função!")
 
 
 @dataclass
@@ -190,6 +197,14 @@ class Getattr(Expr):
     Ex.: x.y
     """
 
+    obj: Expr
+    name: str
+
+    def eval(self, ctx: Ctx):
+        obj = self.obj.eval(ctx)
+        value = getattr(obj, self.name)
+        return value
+
 
 @dataclass
 class Setattr(Expr):
@@ -210,8 +225,9 @@ class Print(Stmt):
 
     Ex.: print "Hello, world!";
     """
+
     expr: Expr
-    
+
     def eval(self, ctx: Ctx):
         value = self.expr.eval(ctx)
         print(value)
